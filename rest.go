@@ -45,36 +45,35 @@ func (_ *RestController) HealthHandler(w http.ResponseWriter, r *http.Request) {
 
 func (this *RestController) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST requests are allowed", 400)
+		http.Error(w, "Only POST requests are allowed", http.StatusBadRequest)
 		return
 	}
 
-	var message Request
-	err := json.NewDecoder(r.Body).Decode(&message)
+	var alertData GrafanaAlert
+	err := json.NewDecoder(r.Body).Decode(&alertData)
 	if err != nil {
-		http.Error(w, err.Error(), 400)
+		http.Error(w, "Invalid JSON body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	log.Info(message.Title + " / " + message.Mess)
-	resp, err := this.Service.SendTelegramMessage(formatMessage(message))
+	if len(alertData.Alerts) == 0 {
+		http.Error(w, "No alerts found in request", http.StatusBadRequest)
+		return
+	}
 
+	message, err := RenderTelegramMessage(alertData.Alerts)
 	if err != nil {
-		http.Error(w, "Message delivery failed: "+err.Error(), 500)
+		http.Error(w, "Error rendering message: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	resp, err := this.Service.SendTelegramMessage(message)
+	if err != nil {
+		http.Error(w, "Message delivery failed: "+err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(resp)
-}
-
-func formatMessage(message Request) string {
-	mess := fmt.Sprintf("<b>%s</b>", message.Title)
-	mess += "\n"
-	for _, v := range message.Metrics {
-		mess += fmt.Sprintf("<i>%s : %f</i>\n", v.Metric, v.Value)
-	}
-	mess += ""
-	mess += message.RuleUrl
-	return mess
 }

@@ -1,18 +1,22 @@
 package main
 
-type Request struct {
-	Metrics  []EvalMatch `json:"evalMatches"`
-	Mess     string      `json:"message"`
-	RuleName string      `json:"ruleName"`
-	RuleUrl  string      `json:"ruleUrl"`
-	State    string      `json:"state"`
-	Title    string      `json:"title"`
+type GrafanaAlert struct {
+	Alerts []Alert `json:"alerts"`
 }
 
-type EvalMatch struct {
-	Value  float32           `json:"value"`
-	Metric string            `json:"metric"`
-	Tags   map[string]string `json:"tags"`
+type Alert struct {
+	Annotations  map[string]string  `json:"annotations"`
+	DashboardURL string             `json:"dashboardURL"`
+	EndsAt       string             `json:"endsAt"`
+	Fingerprint  string             `json:"fingerprint"`
+	GeneratorURL string             `json:"generatorURL"`
+	Labels       map[string]string  `json:"labels"`
+	PanelURL     string             `json:"panelURL"`
+	SilenceURL   string             `json:"silenceURL"`
+	StartsAt     string             `json:"startsAt"`
+	Status       string             `json:"status"`
+	ValueString  string             `json:"valueString"`
+	Values       map[string]float64 `json:"values"`
 }
 
 type Message struct {

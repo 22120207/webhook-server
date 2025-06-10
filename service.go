@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"net/http"
 	"net/url"
@@ -69,8 +70,65 @@ func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return text, fmt.Errorf("telegram api returned non-OK status: %s, response: %s", resp.Status, string(text))
+		return text, fmt.Errorf("Telegram returned non-OK: %s - %s", resp.Status, text)
 	}
 
 	return text, nil
+}
+
+var telegramTemplate = `
+{{ define "telegram_harddrive" }}
+  {{ range . }}
+    {{ if eq .Status "firing" }}{{ template "telegram_alert_firing" . }}{{ end }}
+    {{ if eq .Status "resolved" }}{{ template "telegram_alert_resolved" . }}{{ end }}
+  {{ end }}
+{{ end }}
+
+{{ define "telegram_alert_firing" }}
+❗️❗️❗️❗️❗️ CẢNH BÁO ❗️❗️❗️❗️❗️
+
+🚨 Vấn đề: {{ .Annotations.summary }}
+<b>Value = </b>{{ .Values.B }}
+
+<b>Thông tin node:</b>
+{{ if index .Labels "name" }}- Name = {{ index .Labels "name" }}{{ end }}
+{{ if index .Labels "instance" }}- Node = {{ index .Labels "instance" }}{{ end }}
+{{ if index .Labels "severity" }}- Severity = {{ index .Labels "severity" }}{{ end }}
+{{ if index .Labels "volume" }}- Volume = {{ index .Labels "volume" }}{{ end }}
+{{ if index .Labels "mountpoint" }}- Mountpoint = {{ index .Labels "mountpoint" }}{{ end }}
+{{ if index .Labels "device" }}- Device = {{ index .Labels "device" }}{{ end }}
+{{ if index .Labels "loc" }}- Location = {{ index .Labels "loc" }}{{ end }}
+
+{{ end }}
+
+{{ define "telegram_alert_resolved" }}
+🤟🤟🤟 Đã giải quyết xong 🤘🤘🤘
+
+🛠 Vấn đề: {{ .Annotations.summary }}
+
+<b>Thông tin nodes:</b>
+{{ if index .Labels "name" }}- Name = {{ index .Labels "name" }}{{ end }}
+{{ if index .Labels "instance" }}- Instance = {{ index .Labels "instance" }}{{ end }}
+{{ if index .Labels "severity" }}- Severity = {{ index .Labels "severity" }}{{ end }}
+{{ if index .Labels "volume" }}- Volume = {{ index .Labels "volume" }}{{ end }}
+{{ if index .Labels "mountpoint" }}- Mountpoint = {{ index .Labels "mountpoint" }}{{ end }}
+{{ if index .Labels "device" }}- Device = {{ index .Labels "device" }}{{ end }}
+{{ if index .Labels "loc" }}- Location = {{ index .Labels "loc" }}{{ end }}
+
+{{ end }}
+ `
+
+func RenderTelegramMessage(alerts []Alert) (string, error) {
+	tmpl, err := template.New("telegram").Parse(telegramTemplate)
+	if err != nil {
+		return "", fmt.Errorf("parsing template: %w", err)
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.ExecuteTemplate(&buf, "telegram_harddrive", alerts)
+	if err != nil {
+		return "", fmt.Errorf("executing template: %w", err)
+	}
+
+	return buf.String(), nil
 }
