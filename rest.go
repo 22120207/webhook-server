@@ -61,19 +61,21 @@ func (this *RestController) WebhookHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	message, err := RenderTelegramMessage(alertData.Alerts)
-	if err != nil {
-		http.Error(w, "Error rendering message: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
+	for _, value := range alertData.Alerts {
+		message, err := RenderTelegramMessage(value)
+		if err != nil {
+			http.Error(w, "Error rendering message: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
 
-	resp, err := this.Service.SendTelegramMessage(message)
-	if err != nil {
-		http.Error(w, "Message delivery failed: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
+		resp, err := this.Service.SendTelegramMessage(message)
+		if err != nil {
+			http.Error(w, "Message delivery failed: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(resp)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(resp)
+	}
 }

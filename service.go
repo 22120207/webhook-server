@@ -108,37 +108,16 @@ var telegramTemplate = `
 {{ end }}
  `
 
-func RenderTelegramMessage(alerts []Alert) (string, error) {
-	funcMap := template.FuncMap{
-		"div": func(a interface{}, b float64) float64 {
-			var af float64
-			switch v := a.(type) {
-			case float64:
-				af = v
-			case int:
-				af = float64(v)
-			case int64:
-				af = float64(v)
-			case json.Number:
-				f, _ := v.Float64()
-				af = f
-			default:
-				af = 0
-			}
-			if b == 0 {
-				return 0
-			}
-			return af / b
-		},
-	}
-
-	tmpl, err := template.New("telegram").Funcs(funcMap).Parse(telegramTemplate)
+func RenderTelegramMessage(alert Alert) (string, error) {
+	tmpl, err := template.New("telegram").Parse(telegramTemplate)
 	if err != nil {
 		return "", fmt.Errorf("parsing template: %w", err)
 	}
 
+	fmt.Printf("%+v\n", alert)
+
 	var buf bytes.Buffer
-	err = tmpl.ExecuteTemplate(&buf, "telegram_harddrive", alerts)
+	err = tmpl.ExecuteTemplate(&buf, "telegram_harddrive", alert)
 	if err != nil {
 		return "", fmt.Errorf("executing template: %w", err)
 	}
