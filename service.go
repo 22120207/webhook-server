@@ -87,7 +87,7 @@ var telegramTemplate = `
 {{ define "telegram_alert_firing" }}
 ❗️❗️❗️❗️❗️ CẢNH BÁO ❗️❗️❗️❗️❗️
 
-🚨 Vấn đề: {{ .Annotations.summary }}
+🚨 Vấn đề: {{ .Annotations.summary }} 🚨
 <b>Value = </b>{{ .Values.B }}
 
 <b>Thông tin node:</b>
@@ -104,7 +104,7 @@ var telegramTemplate = `
 {{ define "telegram_alert_resolved" }}
 🤟🤟🤟 Đã giải quyết xong 🤘🤘🤘
 
-🛠 Vấn đề: {{ .Annotations.summary }}
+🔧🛠️✨ Vấn đề: {{ .Annotations.summary }} 🔩⚙️🔨
 
 <b>Thông tin nodes:</b>
 {{ if index .Labels "name" }}- Name = {{ index .Labels "name" }}{{ end }}
@@ -123,6 +123,8 @@ func RenderTelegramMessage(alerts []Alert) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("parsing template: %w", err)
 	}
+
+	fmt.Printf("%+v\n", alerts)
 
 	var buf bytes.Buffer
 	err = tmpl.ExecuteTemplate(&buf, "telegram_harddrive", alerts)

@@ -73,6 +73,8 @@ func (this *RestController) WebhookHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	fmt.Println("Message delivery succeed: ")
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(resp)
