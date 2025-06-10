@@ -88,16 +88,11 @@ var telegramTemplate = `
 ❗️❗️❗️❗️❗️ CẢNH BÁO ❗️❗️❗️❗️❗️
 
 🚨 Vấn đề: {{ .Annotations.summary }} 🚨
-<b>Value = </b>{{ .Values.B }}
+<b>Thời gian hoạt động = </b>{{ printf "%.2f" (div .Values.B 31536000) }} năm
 
 <b>Thông tin node:</b>
-{{ if index .Labels "name" }}- Name = {{ index .Labels "name" }}{{ end }}
 {{ if index .Labels "instance" }}- Node = {{ index .Labels "instance" }}{{ end }}
-{{ if index .Labels "severity" }}- Severity = {{ index .Labels "severity" }}{{ end }}
-{{ if index .Labels "volume" }}- Volume = {{ index .Labels "volume" }}{{ end }}
-{{ if index .Labels "mountpoint" }}- Mountpoint = {{ index .Labels "mountpoint" }}{{ end }}
 {{ if index .Labels "device" }}- Device = {{ index .Labels "device" }}{{ end }}
-{{ if index .Labels "loc" }}- Location = {{ index .Labels "loc" }}{{ end }}
 
 {{ end }}
 
@@ -107,24 +102,40 @@ var telegramTemplate = `
 🔧🛠️✨ Vấn đề: {{ .Annotations.summary }} 🔩⚙️🔨
 
 <b>Thông tin nodes:</b>
-{{ if index .Labels "name" }}- Name = {{ index .Labels "name" }}{{ end }}
-{{ if index .Labels "instance" }}- Instance = {{ index .Labels "instance" }}{{ end }}
-{{ if index .Labels "severity" }}- Severity = {{ index .Labels "severity" }}{{ end }}
-{{ if index .Labels "volume" }}- Volume = {{ index .Labels "volume" }}{{ end }}
-{{ if index .Labels "mountpoint" }}- Mountpoint = {{ index .Labels "mountpoint" }}{{ end }}
+{{ if index .Labels "instance" }}- Node = {{ index .Labels "instance" }}{{ end }}
 {{ if index .Labels "device" }}- Device = {{ index .Labels "device" }}{{ end }}
-{{ if index .Labels "loc" }}- Location = {{ index .Labels "loc" }}{{ end }}
 
 {{ end }}
  `
 
 func RenderTelegramMessage(alerts []Alert) (string, error) {
-	tmpl, err := template.New("telegram").Parse(telegramTemplate)
+	funcMap := template.FuncMap{
+		"div": func(a interface{}, b float64) float64 {
+			var af float64
+			switch v := a.(type) {
+			case float64:
+				af = v
+			case int:
+				af = float64(v)
+			case int64:
+				af = float64(v)
+			case json.Number:
+				f, _ := v.Float64()
+				af = f
+			default:
+				af = 0
+			}
+			if b == 0 {
+				return 0
+			}
+			return af / b
+		},
+	}
+
+	tmpl, err := template.New("telegram").Funcs(funcMap).Parse(telegramTemplate)
 	if err != nil {
 		return "", fmt.Errorf("parsing template: %w", err)
 	}
-
-	fmt.Printf("%+v\n", alerts)
 
 	var buf bytes.Buffer
 	err = tmpl.ExecuteTemplate(&buf, "telegram_harddrive", alerts)
