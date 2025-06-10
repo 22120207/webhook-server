@@ -108,16 +108,16 @@ var telegramTemplate = `
 {{ end }}
  `
 
-func RenderTelegramMessage(alert Alert) (string, error) {
+func RenderTelegramMessage(alerts []Alert) (string, error) {
 	tmpl, err := template.New("telegram").Parse(telegramTemplate)
 	if err != nil {
 		return "", fmt.Errorf("parsing template: %w", err)
 	}
 
-	fmt.Printf("%+v\n", alert)
+	fmt.Printf("%+v\n", alerts)
 
 	var buf bytes.Buffer
-	err = tmpl.ExecuteTemplate(&buf, "telegram_harddrive", alert)
+	err = tmpl.ExecuteTemplate(&buf, "telegram_harddrive", alerts)
 	if err != nil {
 		return "", fmt.Errorf("executing template: %w", err)
 	}
