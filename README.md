@@ -2,7 +2,7 @@
 
 Support only for Discord and Telegram
 
-## I. Installation
+## I. Instruction for run binaries file
 ```bash
 $ go build -ldflags="-s -w"
 ```
@@ -12,9 +12,23 @@ $ go build -ldflags="-s -w"
 .\webhook-proxy
 ```
 
+## II. Instruction for run docker container
+
+### 1. Build Docker image
+```bash
+docker build -t webhook-proxy .
+```
+
+### 2.
+```bash
+docker run -dp 8080:8080 --name webhook-proxy webhook-proxy
+
+```
+
 ## II. Results Demo
-#### 1. Telegram
+
+### 1. Telegram
 ![TELEGRAM NOTIFY](screenshot/telegram-notify.png)
 
-#### 2. Discord
+### 2. Discord
 ![DISCORD NOTIFY](screenshot/discord-notify.png)
