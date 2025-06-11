@@ -70,6 +70,7 @@ func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
 	if resp.StatusCode != http.StatusOK {
 		return text, fmt.Errorf("telegram API returned %s: %s", resp.Status, text)
 	}
+	fmt.Println(resp.Status, resp.Body)
 
 	return text, nil
 }
@@ -131,6 +132,8 @@ const telegramTemplate = `
 {{- if index .Labels "device" }}
 - Device: {{ index .Labels "device" }}
 {{- end }}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 {{- end -}}
 
 {{- define "telegram_alert_resolved" -}}
@@ -145,6 +148,8 @@ const telegramTemplate = `
 {{- if index .Labels "device" }}
 - Device: {{ index .Labels "device" }}
 {{- end }}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 {{- end -}}
 `
 
