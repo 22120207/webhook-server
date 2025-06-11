@@ -10,7 +10,9 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 
+	"github.com/joho/godotenv"
 	"golang.org/x/net/proxy"
 )
 
@@ -21,12 +23,17 @@ type ITelegramSender interface {
 type TelegramSender struct{}
 
 func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
-	token := getEnv("BOT_TOKEN", "")
-	chatId := getEnv("CHAT_ID", "")
-	proxyURLStr := getEnv("PROXY_URL", "")
-	proxyType := getEnv("PROXY_TYPE", "socks5")
-	proxyUser := getEnv("PROXY_USER", "vietnix")
-	proxyPass := getEnv("PROXY_PASS", "telegram2025")
+	envErr := godotenv.Load()
+	if envErr != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	token := os.Getenv("BOT_TOKEN")
+	chatId := os.Getenv("CHAT_ID")
+	proxyURLStr := os.Getenv("PROXY_URL")
+	proxyType := os.Getenv("PROXY_TYPE")
+	proxyUser := os.Getenv("PROXY_USER")
+	proxyPass := os.Getenv("PROXY_PASS")
 
 	if token == "" {
 		fmt.Println("Environment variable BOT_TOKEN is not set or is empty.")
@@ -38,7 +45,7 @@ func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
 	telegramURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage?parse_mode=html", token)
 
 	body := new(bytes.Buffer)
-	err := json.NewEncoder(body).Encode(Message{
+	err := json.NewEncoder(body).Encode(TelegramMessage{
 		ChatId:    chatId,
 		Text:      message,
 		ParseMode: "HTML",

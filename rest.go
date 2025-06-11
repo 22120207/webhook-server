@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/op/go-logging"
@@ -13,24 +12,17 @@ import (
 var log = logging.MustGetLogger("grafana-telegram-proxy")
 
 type RestController struct {
-	Service ITelegramSender
+	Telegram ITelegramSender
+	Discord  IDiscordSender
 }
 
 func (this *RestController) Start() {
 	http.HandleFunc("/health", this.HealthHandler)
-	if useAuth() {
-		http.HandleFunc("/", basicAuth(this.WebhookHandler))
-	} else {
-		http.HandleFunc("/", this.WebhookHandler)
-	}
-	fmt.Println("Starting server on port:", strings.Split(getPort(), ":")[1])
-	log.Fatal(http.ListenAndServe(getPort(), nil))
-}
 
-func useAuth() bool {
-	_, usernameOk := os.LookupEnv("USERNAME")
-	_, passwordOk := os.LookupEnv("PASSWORD")
-	return usernameOk && passwordOk
+	http.HandleFunc("/", this.WebhookHandler)
+
+	fmt.Println("Starting server on port:", strings.Split("0.0.0.0:8080", ":")[1])
+	log.Fatal(http.ListenAndServe("0.0.0.0:8080", nil))
 }
 
 func (_ *RestController) HealthHandler(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +61,7 @@ func (this *RestController) WebhookHandler(w http.ResponseWriter, r *http.Reques
 
 	fmt.Println(message)
 
-	resp, err := this.Service.SendTelegramMessage(message)
+	resp, err := this.Telegram.SendTelegramMessage(message)
 	if err != nil {
 		http.Error(w, "Message delivery failed: "+err.Error(), http.StatusInternalServerError)
 		return

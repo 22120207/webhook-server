@@ -19,8 +19,13 @@ type Alert struct {
 	Values       map[string]float64 `json:"values"`
 }
 
-type Message struct {
+type TelegramMessage struct {
 	ChatId    string `json:"chat_id"`
 	Text      string `json:"text"`
 	ParseMode string `json:"parese_mode"`
+}
+
+type DiscordMessage struct {
+	Content   string `json:"content"`
+	AvatarURL string `json:"avatar_url,omitempty"`
 }

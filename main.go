@@ -1,6 +1,10 @@
 package main
 
 func main() {
-	server := RestController{Service: &TelegramSender{}}
+	server := RestController{
+		Telegram: &TelegramSender{},
+		Discord:  &DiscordSender{},
+	}
+
 	server.Start()
 }
