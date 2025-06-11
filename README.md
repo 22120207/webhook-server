@@ -9,7 +9,7 @@ $ go build -ldflags="-s -w"
 
 ### Run
 ```bash
-.\grafana-webhook-proxy
+.\webhook-proxy
 ```
 
 ## II. Results Demo
