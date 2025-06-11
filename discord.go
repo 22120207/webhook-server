@@ -50,7 +50,7 @@ func (d *DiscordSender) SendDiscordMessage(message string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusNoContent {
 		return text, fmt.Errorf("discord API returned %s: %s", resp.Status, text)
 	}
 
