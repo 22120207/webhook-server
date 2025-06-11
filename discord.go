@@ -66,33 +66,34 @@ const discordTemplate = `
 {{- end -}}
 
 {{- define "discord_alert_firing" -}}
-❗️❗️❗️❗️❗️ CẢNH BÁO ❗️❗️❗️❗️❗️
+# ❗️❗️❗️ CẢNH BÁO HỆ THỐNG ❗️❗️❗️
 
-🚨 Vấn đề: {{ .Annotations.summary }} 🚨
-**Thời gian hoạt động:** {{ printf "%.2f" (div .Values.B 31536000) }} năm
+> 🚨 **Vấn đề:** {{ .Annotations.summary }}
 
-**Thông tin node:**
+> ⏳ **Thời gian hoạt động:** {{ printf "%.2f" (div .Values.B 31536000) }} năm
+
+### 🖥️ Thông tin node:
 {{- if index .Labels "instance" }}
-- Node: {{ index .Labels "instance" }}
+> 🔹 **Node:** {{ index .Labels "instance" }}
 {{- end }}
 {{- if index .Labels "device" }}
-- Device: {{ index .Labels "device" }}
+> 🔸 **Device:** {{ index .Labels "device" }}
 {{- end }}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 {{- end -}}
 
 {{- define "discord_alert_resolved" -}}
-🤟🤟🤟 Đã giải quyết xong 🤘🤘🤘
+# 🤟 ĐÃ GIẢI QUYẾT 🤘
 
-🔧🛠️✨ Vấn đề: {{ .Annotations.summary }} 🔩⚙️🔨
+> 🔧🛠️✨ **Vấn đề:** {{ .Annotations.summary }}
 
-**Thông tin node:**
+### 🖥️ Thông tin node:
 {{- if index .Labels "instance" }}
-- Node: {{ index .Labels "instance" }}
+> 🔹 **Node:** {{ index .Labels "instance" }}
 {{- end }}
 {{- if index .Labels "device" }}
-- Device: {{ index .Labels "device" }}
+> 🔸 **Device:** {{ index .Labels "device" }}
 {{- end }}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
