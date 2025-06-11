@@ -9,7 +9,7 @@ go build -ldflags="-s -w"
 
 ### Run
 ```bash
-.\webhook-proxy
+./webhook-proxy
 ```
 
 ## II. Instruction for run docker container
