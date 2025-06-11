@@ -131,8 +131,6 @@ const telegramTemplate = `
 {{- if index .Labels "device" }}
 - Device: {{ index .Labels "device" }}
 {{- end }}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 {{- end -}}
 
 {{- define "telegram_alert_resolved" -}}
@@ -147,25 +145,70 @@ const telegramTemplate = `
 {{- if index .Labels "device" }}
 - Device: {{ index .Labels "device" }}
 {{- end }}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 {{- end -}}
 `
 
-func RenderTelegramMessage(alerts []Alert) (string, error) {
+func RenderTelegramMessages(alerts []Alert) ([]string, error) {
+	const maxTelegramLength = 4096
+
 	funcMap := template.FuncMap{
 		"div": safeDivide,
 	}
 
 	tmpl, err := template.New("telegram").Funcs(funcMap).Parse(telegramTemplate)
 	if err != nil {
-		return "", fmt.Errorf("failed to parse template: %w", err)
+		return nil, fmt.Errorf("failed to parse template: %w", err)
 	}
 
-	var buf bytes.Buffer
-	if err := tmpl.ExecuteTemplate(&buf, "telegram_harddrive", alerts); err != nil {
-		return "", fmt.Errorf("failed to execute template: %w", err)
+	var messages []string
+	var currentBatch []Alert
+
+	for _, alert := range alerts {
+		testBatch := append(currentBatch, alert)
+
+		var buf bytes.Buffer
+		if err := tmpl.ExecuteTemplate(&buf, "telegram_harddrive", testBatch); err != nil {
+			return nil, fmt.Errorf("failed to execute template: %w", err)
+		}
+
+		if buf.Len() > maxTelegramLength {
+			if len(currentBatch) > 0 {
+				var batchBuf bytes.Buffer
+				if err := tmpl.ExecuteTemplate(&batchBuf, "telegram_harddrive", currentBatch); err != nil {
+					return nil, fmt.Errorf("failed to execute template for batch: %w", err)
+				}
+				messages = append(messages, batchBuf.String())
+				currentBatch = []Alert{alert}
+			} else {
+				var singleBuf bytes.Buffer
+				if err := tmpl.ExecuteTemplate(&singleBuf, "telegram_harddrive", []Alert{alert}); err != nil {
+					return nil, fmt.Errorf("failed to execute template for single alert: %w", err)
+				}
+				messages = append(messages, singleBuf.String())
+			}
+		} else {
+			currentBatch = testBatch
+		}
 	}
 
-	return buf.String(), nil
+	if len(currentBatch) > 0 {
+		var buf bytes.Buffer
+		if err := tmpl.ExecuteTemplate(&buf, "telegram_harddrive", currentBatch); err != nil {
+			return nil, fmt.Errorf("failed to execute template for final batch: %w", err)
+		}
+		messages = append(messages, buf.String())
+	}
+
+	return messages, nil
+}
+
+func RenderTelegramMessage(alerts []Alert) (string, error) {
+	messages, err := RenderTelegramMessages(alerts)
+	if err != nil {
+		return "", err
+	}
+	if len(messages) == 0 {
+		return "", fmt.Errorf("no messages generated")
+	}
+	return messages[0], nil
 }

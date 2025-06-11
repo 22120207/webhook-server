@@ -50,7 +50,7 @@ func (d *DiscordSender) SendDiscordMessage(message string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	if resp.StatusCode != http.StatusNoContent {
+	if resp.StatusCode != http.StatusOK {
 		return text, fmt.Errorf("discord API returned %s: %s", resp.Status, text)
 	}
 
@@ -66,54 +66,96 @@ const discordTemplate = `
 {{- end -}}
 
 {{- define "discord_alert_firing" -}}
-# ❗️❗️❗️ CẢNH BÁO HỆ THỐNG ❗️❗️❗️
+❗️❗️❗️❗️❗️ CẢNH BÁO ❗️❗️❗️❗️❗️
 
-> 🚨 **Vấn đề:** {{ .Annotations.summary }}
+🚨 Vấn đề: {{ .Annotations.summary }} 🚨
+**Thời gian hoạt động:** {{ printf "%.2f" (div .Values.B 31536000) }} năm
 
-> ⏳ **Thời gian hoạt động:** {{ printf "%.2f" (div .Values.B 31536000) }} năm
-
-### 🖥️ Thông tin node:
+**Thông tin node:**
 {{- if index .Labels "instance" }}
-> 🔹 **Node:** {{ index .Labels "instance" }}
+- Node: {{ index .Labels "instance" }}
 {{- end }}
 {{- if index .Labels "device" }}
-> 🔸 **Device:** {{ index .Labels "device" }}
+- Device: {{ index .Labels "device" }}
 {{- end }}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 {{- end -}}
 
 {{- define "discord_alert_resolved" -}}
-# 🤟 ĐÃ GIẢI QUYẾT 🤘
+🤟🤟🤟 Đã giải quyết xong 🤘🤘🤘
 
-> 🔧🛠️✨ **Vấn đề:** {{ .Annotations.summary }}
+🔧🛠️✨ Vấn đề: {{ .Annotations.summary }} 🔩⚙️🔨
 
-### 🖥️ Thông tin node:
+**Thông tin node:**
 {{- if index .Labels "instance" }}
-> 🔹 **Node:** {{ index .Labels "instance" }}
+- Node: {{ index .Labels "instance" }}
 {{- end }}
 {{- if index .Labels "device" }}
-> 🔸 **Device:** {{ index .Labels "device" }}
+- Device: {{ index .Labels "device" }}
 {{- end }}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 {{- end -}}
 `
 
-func RenderDiscordMessage(alerts []Alert) (string, error) {
+func RenderDiscordMessages(alerts []Alert) ([]string, error) {
+	const maxDiscordLength = 2000
+
 	funcMap := template.FuncMap{
 		"div": safeDivide,
 	}
 
 	tmpl, err := template.New("discord").Funcs(funcMap).Parse(discordTemplate)
 	if err != nil {
-		return "", fmt.Errorf("failed to parse template: %w", err)
+		return nil, fmt.Errorf("failed to parse template: %w", err)
 	}
 
-	var buf bytes.Buffer
-	if err := tmpl.ExecuteTemplate(&buf, "discord_harddrive", alerts); err != nil {
-		return "", fmt.Errorf("failed to execute template: %w", err)
+	var messages []string
+	var currentBatch []Alert
+
+	for _, alert := range alerts {
+		testBatch := append(currentBatch, alert)
+
+		var buf bytes.Buffer
+		if err := tmpl.ExecuteTemplate(&buf, "discord_harddrive", testBatch); err != nil {
+			return nil, fmt.Errorf("failed to execute template: %w", err)
+		}
+
+		if buf.Len() > maxDiscordLength {
+			if len(currentBatch) > 0 {
+				var batchBuf bytes.Buffer
+				if err := tmpl.ExecuteTemplate(&batchBuf, "discord_harddrive", currentBatch); err != nil {
+					return nil, fmt.Errorf("failed to execute template for batch: %w", err)
+				}
+				messages = append(messages, batchBuf.String())
+				currentBatch = []Alert{alert}
+			} else {
+				var singleBuf bytes.Buffer
+				if err := tmpl.ExecuteTemplate(&singleBuf, "discord_harddrive", []Alert{alert}); err != nil {
+					return nil, fmt.Errorf("failed to execute template for single alert: %w", err)
+				}
+				messages = append(messages, singleBuf.String())
+			}
+		} else {
+			currentBatch = testBatch
+		}
 	}
 
-	return buf.String(), nil
+	if len(currentBatch) > 0 {
+		var buf bytes.Buffer
+		if err := tmpl.ExecuteTemplate(&buf, "discord_harddrive", currentBatch); err != nil {
+			return nil, fmt.Errorf("failed to execute template for final batch: %w", err)
+		}
+		messages = append(messages, buf.String())
+	}
+
+	return messages, nil
+}
+
+func RenderDiscordMessage(alerts []Alert) (string, error) {
+	messages, err := RenderDiscordMessages(alerts)
+	if err != nil {
+		return "", err
+	}
+	if len(messages) == 0 {
+		return "", fmt.Errorf("no messages generated")
+	}
+	return messages[0], nil
 }
