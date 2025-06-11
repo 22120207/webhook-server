@@ -132,7 +132,7 @@ const telegramTemplate = `
 - Device: {{ index .Labels "device" }}
 {{- end }}
 
----
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 {{- end -}}
 
 {{- define "telegram_alert_resolved" -}}
@@ -148,7 +148,7 @@ const telegramTemplate = `
 - Device: {{ index .Labels "device" }}
 {{- end }}
 
----
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 {{- end -}}
 `
 
