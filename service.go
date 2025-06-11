@@ -45,7 +45,6 @@ func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
 	}
 
 	client := &http.Client{}
-	var proxyAuthHeader string
 
 	if proxyURLStr != "" {
 		proxyURL, err := url.Parse(proxyURLStr)
@@ -56,15 +55,18 @@ func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
 		transport := &http.Transport{
 			Proxy: http.ProxyURL(proxyURL),
 		}
-		client.Transport = transport
 
 		if proxyURL.User != nil {
 			username := proxyURL.User.Username()
 			password, _ := proxyURL.User.Password()
 
 			auth := base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
-			proxyAuthHeader = "Basic " + auth
+
+			transport.ProxyConnectHeader = http.Header{}
+			transport.ProxyConnectHeader.Add("Proxy-Authorization", "Basic "+auth)
 		}
+
+		client.Transport = transport
 	}
 
 	req, err := http.NewRequest("POST", telgramURL, body)
@@ -72,10 +74,6 @@ func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
 		return nil, fmt.Errorf("error creating HTTP request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
-
-	if proxyAuthHeader != "" {
-		req.Header.Set("Proxy-Authorization", proxyAuthHeader)
-	}
 
 	// Send the request
 	resp, err := client.Do(req)
