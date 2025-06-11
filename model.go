@@ -20,6 +20,7 @@ type Alert struct {
 }
 
 type Message struct {
-	ChatId string `json:"chat_id"`
-	Text   string `json:"text"`
+	ChatId    string `json:"chat_id"`
+	Text      string `json:"text"`
+	ParseMode string `json:"parese_mode"`
 }

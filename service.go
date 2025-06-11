@@ -2,12 +2,16 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
+
+	"golang.org/x/net/proxy"
 )
 
 type ITelegramSender interface {
@@ -20,6 +24,9 @@ func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
 	token := getEnv("BOT_TOKEN", "")
 	chatId := getEnv("CHAT_ID", "")
 	proxyURLStr := getEnv("PROXY_URL", "")
+	proxyType := getEnv("PROXY_TYPE", "socks5")
+	proxyUser := getEnv("PROXY_USER", "vietnix")
+	proxyPass := getEnv("PROXY_PASS", "telegram2025")
 
 	if token == "" {
 		fmt.Println("Environment variable BOT_TOKEN is not set or is empty.")
@@ -27,13 +34,15 @@ func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
 	if chatId == "" {
 		fmt.Println("Environment variable CHAT_ID is not set or is empty.")
 	}
-	if proxyURLStr == "" {
-		fmt.Println("Environment variable PROXY_URL is not set or is empty.")
-	}
 
-	telgramURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage?parse_mode=html", token)
+	telegramURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage?parse_mode=html", token)
+
 	body := new(bytes.Buffer)
-	err := json.NewEncoder(body).Encode(Message{chatId, message})
+	err := json.NewEncoder(body).Encode(Message{
+		ChatId:    chatId,
+		Text:      message,
+		ParseMode: "HTML",
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -46,13 +55,28 @@ func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
 			return nil, fmt.Errorf("error parsing proxy URL '%s': %w", proxyURLStr, err)
 		}
 
+		var auth *proxy.Auth
+		if proxyUser != "" && proxyPass != "" {
+			auth = &proxy.Auth{
+				User:     proxyUser,
+				Password: proxyPass,
+			}
+		}
+
+		dialer, err := proxy.SOCKS5("tcp", proxyURL.Host, auth, proxy.Direct)
+		if err != nil {
+			return nil, fmt.Errorf("error creating SOCKS5 dialer: %w", err)
+		}
+
 		transport := &http.Transport{
-			Proxy: http.ProxyURL(proxyURL),
+			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+				return dialer.Dial(network, addr)
+			},
 		}
 		client.Transport = transport
 	}
 
-	req, err := http.NewRequest("POST", telgramURL, body)
+	req, err := http.NewRequest("POST", telegramURL, body)
 	if err != nil {
 		return nil, fmt.Errorf("error creating HTTP request: %w", err)
 	}
