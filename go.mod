@@ -1,4 +1,4 @@
-module grafana-telegram-proxy
+module grafana-webhook-proxy
 
 go 1.23.0
 
