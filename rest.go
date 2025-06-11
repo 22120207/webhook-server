@@ -2,49 +2,43 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"net/http"
-	"strings"
-
-	"github.com/op/go-logging"
 )
-
-var log = logging.MustGetLogger("grafana-telegram-proxy")
 
 type RestController struct {
 	Telegram ITelegramSender
 	Discord  IDiscordSender
 }
 
-func (this *RestController) Start() {
-	http.HandleFunc("/health", this.HealthHandler)
-
-	http.HandleFunc("/", this.WebhookHandler)
-
-	fmt.Println("Starting server on port:", strings.Split("0.0.0.0:8080", ":")[1])
-	log.Fatal(http.ListenAndServe("0.0.0.0:8080", nil))
+func (rc *RestController) setupRoutes() *http.ServeMux {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/health", rc.HealthHandler)
+	mux.HandleFunc("/telegram", rc.TelegramWebhookHandler)
+	mux.HandleFunc("/discord", rc.DiscordWebhookHandler)
+	return mux
 }
 
-func (_ *RestController) HealthHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *RestController) HealthHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Only GET requests are allowed", 400)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte("UP"))
+	w.Write([]byte("UP"))
 }
 
-func (this *RestController) WebhookHandler(w http.ResponseWriter, r *http.Request) {
+func (rc *RestController) TelegramWebhookHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST requests are allowed", http.StatusBadRequest)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	var alertData GrafanaAlert
-	err := json.NewDecoder(r.Body).Decode(&alertData)
-	if err != nil {
-		http.Error(w, "Invalid JSON body: "+err.Error(), http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&alertData); err != nil {
+		log.Printf("Invalid JSON body: %v", err)
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 		return
 	}
 
@@ -55,19 +49,56 @@ func (this *RestController) WebhookHandler(w http.ResponseWriter, r *http.Reques
 
 	message, err := RenderTelegramMessage(alertData.Alerts)
 	if err != nil {
-		http.Error(w, "Error rendering message: "+err.Error(), http.StatusInternalServerError)
+		log.Printf("Error rendering Telegram message: %v", err)
+		http.Error(w, "Error rendering message", http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Println(message)
-
-	resp, err := this.Telegram.SendTelegramMessage(message)
+	resp, err := rc.Telegram.SendTelegramMessage(message)
 	if err != nil {
-		http.Error(w, "Message delivery failed: "+err.Error(), http.StatusInternalServerError)
+		log.Printf("Telegram message delivery failed: %v", err)
+		http.Error(w, "Message delivery failed", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(resp)
+	w.Write(resp)
+}
+
+func (rc *RestController) DiscordWebhookHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var alertData GrafanaAlert
+	if err := json.NewDecoder(r.Body).Decode(&alertData); err != nil {
+		log.Printf("Invalid JSON body: %v", err)
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		return
+	}
+
+	if len(alertData.Alerts) == 0 {
+		http.Error(w, "No alerts found in request", http.StatusBadRequest)
+		return
+	}
+
+	message, err := RenderDiscordMessage(alertData.Alerts)
+	if err != nil {
+		log.Printf("Error rendering Discord message: %v", err)
+		http.Error(w, "Error rendering message", http.StatusInternalServerError)
+		return
+	}
+
+	resp, err := rc.Discord.SendDiscordMessage(message)
+	if err != nil {
+		log.Printf("Discord message delivery failed: %v", err)
+		http.Error(w, "Message delivery failed", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp)
 }
