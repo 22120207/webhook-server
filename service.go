@@ -50,30 +50,46 @@ func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
 	client := &http.Client{}
 
 	if proxyURLStr != "" {
-		proxyURL, err := url.Parse(proxyURLStr)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing proxy URL '%s': %w", proxyURLStr, err)
-		}
-
-		var auth *proxy.Auth
-		if proxyUser != "" && proxyPass != "" {
-			auth = &proxy.Auth{
-				User:     proxyUser,
-				Password: proxyPass,
+		if proxyType == "socks5" {
+			proxyURL, err := url.Parse(proxyURLStr)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing proxy URL '%s': %w", proxyURLStr, err)
 			}
-		}
 
-		dialer, err := proxy.SOCKS5("tcp", proxyURL.Host, auth, proxy.Direct)
-		if err != nil {
-			return nil, fmt.Errorf("error creating SOCKS5 dialer: %w", err)
-		}
+			var auth *proxy.Auth
+			if proxyUser != "" && proxyPass != "" {
+				auth = &proxy.Auth{
+					User:     proxyUser,
+					Password: proxyPass,
+				}
+			}
 
-		transport := &http.Transport{
-			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-				return dialer.Dial(network, addr)
-			},
+			dialer, err := proxy.SOCKS5("tcp", proxyURL.Host, auth, proxy.Direct)
+			if err != nil {
+				return nil, fmt.Errorf("error creating SOCKS5 dialer: %w", err)
+			}
+
+			transport := &http.Transport{
+				DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+					return dialer.Dial(network, addr)
+				},
+			}
+			client.Transport = transport
+		} else {
+			proxyURL, err := url.Parse(proxyURLStr)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing proxy URL '%s': %w", proxyURLStr, err)
+			}
+
+			if proxyUser != "" && proxyPass != "" {
+				proxyURL.User = url.UserPassword(proxyUser, proxyPass)
+			}
+
+			transport := &http.Transport{
+				Proxy: http.ProxyURL(proxyURL),
+			}
+			client.Transport = transport
 		}
-		client.Transport = transport
 	}
 
 	req, err := http.NewRequest("POST", telegramURL, body)
