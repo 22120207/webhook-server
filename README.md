@@ -4,7 +4,7 @@ Support only for Discord and Telegram
 
 ## I. Instruction for run binaries file
 ```bash
-$ go build -ldflags="-s -w"
+go build -ldflags="-s -w"
 ```
 
 ### Run
