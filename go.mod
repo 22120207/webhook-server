@@ -1,4 +1,4 @@
-module grafana-webhook-proxy
+module webhook-proxy
 
 go 1.23.0
 

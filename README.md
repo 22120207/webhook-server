@@ -13,8 +13,8 @@ $ go build -ldflags="-s -w"
 ```
 
 ## II. Results Demo
-> Telegram
-![TELEGRAM NOTIFY](telegram-notify.png)
+#### Telegram
+![TELEGRAM NOTIFY](screenshot/telegram-notify.png)
 
-> Discord
-![DISCORD NOTIFY](discord-notify.png)
+#### Discord
+![DISCORD NOTIFY](screenshot/discord-notify.png)
