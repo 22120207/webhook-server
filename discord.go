@@ -78,6 +78,7 @@ const discordTemplate = `
 {{- if index .Labels "device" }}
 - Device: {{ index .Labels "device" }}
 {{- end }}
+
 {{- end -}}
 
 {{- define "discord_alert_resolved" -}}
@@ -92,6 +93,7 @@ const discordTemplate = `
 {{- if index .Labels "device" }}
 - Device: {{ index .Labels "device" }}
 {{- end }}
+
 {{- end -}}
 `
 

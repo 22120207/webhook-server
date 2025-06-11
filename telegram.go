@@ -131,6 +131,7 @@ const telegramTemplate = `
 {{- if index .Labels "device" }}
 - Device: {{ index .Labels "device" }}
 {{- end }}
+
 {{- end -}}
 
 {{- define "telegram_alert_resolved" -}}
@@ -145,6 +146,7 @@ const telegramTemplate = `
 {{- if index .Labels "device" }}
 - Device: {{ index .Labels "device" }}
 {{- end }}
+
 {{- end -}}
 `
 
