@@ -16,9 +16,9 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o webhook-proxy
 # Stage 2: Final minimal image using scratch
 FROM scratch
 
+COPY .env ./
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /app/webhook-proxy /webhook-proxy
-COPY --from=builder /app/.env /app/.env
 
 # Expose port and run
 EXPOSE 8080
