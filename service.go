@@ -32,9 +32,6 @@ func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
 
 	if proxyURLStr == "" {
 		fmt.Println("Environment variable PROXY_URL is not set or is empty.")
-	} else {
-		fmt.Println(proxyURLStr)
-	}
 
 	telgramURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage?parse_mode=html", token)
 
@@ -64,6 +61,8 @@ func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
 
 			transport.ProxyConnectHeader = http.Header{}
 			transport.ProxyConnectHeader.Add("Proxy-Authorization", "Basic "+auth)
+
+			fmt.Println(username, password)
 		}
 
 		client.Transport = transport
