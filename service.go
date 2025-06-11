@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -24,14 +25,19 @@ func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
 	if token == "" {
 		fmt.Println("Environment variable BOT_TOKEN is not set or is empty.")
 	}
+
 	if chatId == "" {
 		fmt.Println("Environment variable CHAT_ID is not set or is empty.")
 	}
+
 	if proxyURLStr == "" {
 		fmt.Println("Environment variable PROXY_URL is not set or is empty.")
+	} else {
+		fmt.Println(proxyURLStr)
 	}
 
 	telgramURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage?parse_mode=html", token)
+
 	body := new(bytes.Buffer)
 	err := json.NewEncoder(body).Encode(Message{chatId, message})
 	if err != nil {
@@ -39,6 +45,7 @@ func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
 	}
 
 	client := &http.Client{}
+	var proxyAuthHeader string
 
 	if proxyURLStr != "" {
 		proxyURL, err := url.Parse(proxyURLStr)
@@ -50,6 +57,14 @@ func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
 			Proxy: http.ProxyURL(proxyURL),
 		}
 		client.Transport = transport
+
+		if proxyURL.User != nil {
+			username := proxyURL.User.Username()
+			password, _ := proxyURL.User.Password()
+
+			auth := base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
+			proxyAuthHeader = "Basic " + auth
+		}
 	}
 
 	req, err := http.NewRequest("POST", telgramURL, body)
@@ -58,6 +73,11 @@ func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
 	}
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 
+	if proxyAuthHeader != "" {
+		req.Header.Set("Proxy-Authorization", proxyAuthHeader)
+	}
+
+	// Send the request
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error sending HTTP request: %w", err)
