@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -82,6 +83,10 @@ func (rc *RestController) DiscordWebhookHandler(w http.ResponseWriter, r *http.R
 	if len(alertData.Alerts) == 0 {
 		http.Error(w, "No alerts found in request", http.StatusBadRequest)
 		return
+	}
+
+	for _, alert := range alertData.Alerts {
+		fmt.Println(alert)
 	}
 
 	message, err := RenderDiscordMessage(alertData.Alerts)
