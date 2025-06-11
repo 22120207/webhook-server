@@ -69,6 +69,9 @@ func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
 		return nil, fmt.Errorf("error reading response body: %w", err)
 	}
 
+	fmt.Printf("Telegram API Response Status: %s\n", resp.Status)
+	fmt.Printf("Telegram API Response Body: %s\n", text)
+
 	if resp.StatusCode != http.StatusOK {
 		return text, fmt.Errorf("Telegram returned non-OK: %s - %s", resp.Status, text)
 	}
