@@ -1,25 +1,18 @@
 # syntax=docker/dockerfile:1
 
-# Build the application from source
+# Build stage
 FROM golang:1.23 AS builder
 
 WORKDIR /app
-
 COPY go.mod go.sum ./
-
 RUN go mod download
 
 COPY *.go ./
-
 RUN CGO_ENABLED=0 GOOS=linux go build -o /docker-gs-ping
 
-# Deploy the application binary into a lean image
-FROM gcr.io/distroless/base-debian11 AS build-release-stage
-
-WORKDIR /
-
+# Final stage
+FROM scratch
 COPY --from=builder /docker-gs-ping /docker-gs-ping
 
 EXPOSE 8080
-
 ENTRYPOINT ["/docker-gs-ping"]
