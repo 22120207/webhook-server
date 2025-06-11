@@ -1,6 +1,6 @@
 ## Installation
 ```bash
-go build -ldflags="-s -w"
+$ go build -ldflags="-s -w"
 ```
 
 ## Run
