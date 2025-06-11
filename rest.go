@@ -67,6 +67,8 @@ func (this *RestController) WebhookHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	fmt.Println(message)
+
 	resp, err := this.Service.SendTelegramMessage(message)
 	if err != nil {
 		http.Error(w, "Message delivery failed: "+err.Error(), http.StatusInternalServerError)
