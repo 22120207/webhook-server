@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 )
@@ -48,23 +47,27 @@ func (rc *RestController) TelegramWebhookHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	message, err := RenderTelegramMessage(alertData.Alerts)
-	if err != nil {
-		log.Printf("Error rendering Telegram message: %v", err)
-		http.Error(w, "Error rendering message", http.StatusInternalServerError)
-		return
-	}
+	for _, alert := range alertData.Alerts {
+		singleAlerts := []Alert{alert}
 
-	resp, err := rc.Telegram.SendTelegramMessage(message)
-	if err != nil {
-		log.Printf("Telegram message delivery failed: %v", err)
-		http.Error(w, "Message delivery failed", http.StatusInternalServerError)
-		return
-	}
+		message, err := RenderTelegramMessage(singleAlerts)
+		if err != nil {
+			log.Printf("Error rendering Telegram message: %v", err)
+			http.Error(w, "Error rendering message", http.StatusInternalServerError)
+			return
+		}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(resp)
+		resp, err := rc.Telegram.SendTelegramMessage(message)
+		if err != nil {
+			log.Printf("Telegram message delivery failed: %v", err)
+			http.Error(w, "Message delivery failed", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(resp)
+	}
 }
 
 func (rc *RestController) DiscordWebhookHandler(w http.ResponseWriter, r *http.Request) {
@@ -86,24 +89,24 @@ func (rc *RestController) DiscordWebhookHandler(w http.ResponseWriter, r *http.R
 	}
 
 	for _, alert := range alertData.Alerts {
-		fmt.Println(alert)
-	}
+		singleAlerts := []Alert{alert}
 
-	message, err := RenderDiscordMessage(alertData.Alerts)
-	if err != nil {
-		log.Printf("Error rendering Discord message: %v", err)
-		http.Error(w, "Error rendering message", http.StatusInternalServerError)
-		return
-	}
+		message, err := RenderDiscordMessage(singleAlerts)
+		if err != nil {
+			log.Printf("Error rendering Discord message: %v", err)
+			http.Error(w, "Error rendering message", http.StatusInternalServerError)
+			return
+		}
 
-	resp, err := rc.Discord.SendDiscordMessage(message)
-	if err != nil {
-		log.Printf("Discord message delivery failed: %v", err)
-		http.Error(w, "Message delivery failed", http.StatusInternalServerError)
-		return
-	}
+		resp, err := rc.Discord.SendDiscordMessage(message)
+		if err != nil {
+			log.Printf("Discord message delivery failed: %v", err)
+			http.Error(w, "Message delivery failed", http.StatusInternalServerError)
+			return
+		}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(resp)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(resp)
+	}
 }
