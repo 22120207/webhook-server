@@ -12,6 +12,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /docker-gs-ping
 
 # Final stage
 FROM scratch
+COPY .env ./
 COPY --from=builder /docker-gs-ping /docker-gs-ping
 
 EXPOSE 8080
