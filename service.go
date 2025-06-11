@@ -133,7 +133,6 @@ var telegramTemplate = `
 <b>Thông tin node:</b>
 {{ if index .Labels "instance" }}- Node = {{ index .Labels "instance" }}{{ end }}
 {{ if index .Labels "device" }}- Device = {{ index .Labels "device" }}{{ end }}
-
 {{ end }}
 
 {{ define "telegram_alert_resolved" }}
@@ -144,7 +143,6 @@ var telegramTemplate = `
 <b>Thông tin nodes:</b>
 {{ if index .Labels "instance" }}- Node = {{ index .Labels "instance" }}{{ end }}
 {{ if index .Labels "device" }}- Device = {{ index .Labels "device" }}{{ end }}
-
 {{ end }}
  `
 
