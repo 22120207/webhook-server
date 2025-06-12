@@ -32,12 +32,12 @@ go build -ldflags="-s -w"
 
 ### 1. Build Docker image
 ```bash
-docker build -t webhook-proxy:latest .
+docker build -t webhook-server:latest .
 ```
 
 ### 2.
 ```bash
-docker run -dp 8080:8080 --name webhook-proxy webhook-proxy:latest
+docker run -dp 8080:8080 --name webhook-server webhook-server:latest
 
 ```
 
