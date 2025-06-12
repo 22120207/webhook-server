@@ -9,14 +9,49 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/bwmarrin/discordgo"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"webhook-server/config"
 	"webhook-server/routes"
 	"webhook-server/service"
 )
 
+var mongoClient *mongo.Client
+
 func main() {
+	config, err := config.GetConfig()
+	if err != nil {
+		log.Fatalf("Error loading config: %v", err)
+	}
+
+	mongoClient, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(config.MongoDBURI))
+	if err != nil {
+		log.Fatalf("Error connecting to MongoDB: %v", err)
+	}
+	defer mongoClient.Disconnect(context.TODO())
+
+	discord, err := discordgo.New("Bot " + config.DiscordBotToken)
+	if err != nil {
+		log.Fatalf("Error creating Discord session: %v", err)
+	}
+	defer discord.Close()
+
+	discord.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
+		log.Println("Discord bot is ready")
+	})
+	if err := discord.Open(); err != nil {
+		log.Fatalf("Error opening Discord connection: %v", err)
+	}
+
 	server := &routes.RestController{
 		Telegram: &service.TelegramSender{},
-		Discord:  &service.DiscordSender{},
+		Discord: &service.DiscordSender{
+			Discord:   discord,
+			ChannelID: config.DiscordChannelID,
+		},
+		MongoClient: mongoClient,
 	}
 
 	httpServer := &http.Server{
