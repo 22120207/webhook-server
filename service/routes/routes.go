@@ -256,7 +256,7 @@ func (rc *RestController) DiscordInteractionHandler(w http.ResponseWriter, r *ht
 			}
 
 			// Update original message
-			updatedMessage := fmt.Sprintf("**Thông báo sẽ được tắt trong 72h bởi %s**", interaction.Member.User.Username)
+			updatedMessage := fmt.Sprintf("Thông báo cho node **%s**, device **%s** sẽ được bỏ qua trong 72h bởi %s", nodeInstance, device, interaction.Member.User.Username)
 			components := []discordgo.MessageComponent{
 				discordgo.ActionsRow{
 					Components: []discordgo.MessageComponent{
