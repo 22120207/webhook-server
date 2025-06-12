@@ -146,10 +146,14 @@ func (rc *RestController) DiscordWebhookHandler(w http.ResponseWriter, r *http.R
 			// Build and send firing message with button
 			message := buildFiringMessage(alert)
 			components := []discordgo.MessageComponent{
-				discordgo.Button{
-					Label:    "Resolve for 72h",
-					Style:    discordgo.PrimaryButton,
-					CustomID: fmt.Sprintf("resolve:%s:%s", nodeInstance, device),
+				discordgo.ActionsRow{
+					Components: []discordgo.MessageComponent{
+						discordgo.Button{
+							Label:    "Resolve for 72h",
+							Style:    discordgo.PrimaryButton,
+							CustomID: fmt.Sprintf("resolve:%s:%s", nodeInstance, device),
+						},
+					},
 				},
 			}
 			resp, err := rc.Discord.SendDiscordMessageWithComponents(message, components)
@@ -253,11 +257,15 @@ func (rc *RestController) DiscordInteractionHandler(w http.ResponseWriter, r *ht
 			// Update original message
 			updatedMessage := fmt.Sprintf("**Alert suppressed for 72 hours by %s**", interaction.Member.User.Username)
 			components := []discordgo.MessageComponent{
-				discordgo.Button{
-					Label:    "Resolve for 72h",
-					Style:    discordgo.PrimaryButton,
-					CustomID: customID,
-					Disabled: true,
+				discordgo.ActionsRow{
+					Components: []discordgo.MessageComponent{
+						discordgo.Button{
+							Label:    "Resolve for 72h",
+							Style:    discordgo.PrimaryButton,
+							CustomID: customID,
+							Disabled: true,
+						},
+					},
 				},
 			}
 			if err := rc.Discord.UpdateMessage(interaction.ChannelID, interaction.Message.ID, updatedMessage, components); err != nil {

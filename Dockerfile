@@ -11,15 +11,15 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o webhook-proxy
+RUN CGO_ENABLED=0 GOOS=linux go build -o webhook-server
 
 # Stage 2: Final minimal image using scratch
 FROM scratch
 
 COPY .env ./
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder /app/webhook-proxy /webhook-proxy
+COPY --from=builder /app/webhook-server /webhook-server
 
 # Expose port and run
 EXPOSE 8080
-ENTRYPOINT ["/webhook-proxy"]
+ENTRYPOINT ["/webhook-server"]
