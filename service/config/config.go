@@ -56,14 +56,17 @@ func GetConfig() (*Config, error) {
 		}
 
 		// Validate required fields
-		if config.BotToken == "" {
-			err = fmt.Errorf("BOT_TOKEN environment variable is required")
-			return
+		if config.TelegramDisabled != "true" {
+			if config.BotToken == "" {
+				err = fmt.Errorf("BOT_TOKEN environment variable is required")
+				return
+			}
+			if config.ChatID == "" {
+				err = fmt.Errorf("CHAT_ID environment variable is required")
+				return
+			}
 		}
-		if config.ChatID == "" {
-			err = fmt.Errorf("CHAT_ID environment variable is required")
-			return
-		}
+
 		if config.DiscordBotToken == "" {
 			err = fmt.Errorf("DISCORD_BOT_TOKEN environment variable is required")
 			return
