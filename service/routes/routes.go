@@ -292,7 +292,7 @@ func buildFiringMessage(alert model.Alert) string {
 	device := alert.Labels["device"]
 	uptimeYears := fmt.Sprintf("%.2f", helper.SafeDivide(alert.Values["B"], 31536000))
 
-	return fmt.Sprintf("# ❗️❗️🚨 CẢNH BÁO LỖI HARDWARE ❗️❗️❗️\n\n"+
+	return fmt.Sprintf("# ❗️❗️🚨 CẢNH BÁO ❗️❗️❗️\n\n"+
 		"> 🚨 **Vấn đề:** %s\n"+
 		"> ⏳ **Thời gian hoạt động:** %s năm\n"+
 		"### 🖥️ Thông tin node:\n"+
