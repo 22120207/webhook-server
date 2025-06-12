@@ -276,7 +276,7 @@ func (rc *RestController) DiscordInteractionHandler(w http.ResponseWriter, r *ht
 			response := &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Content: fmt.Sprintf("Thông báo cho %s %s sẽ được bỏ qua trong 72h.", nodeInstance, device),
+					Content: fmt.Sprintf("Thông báo cho node **%s**, device **%s** sẽ được bỏ qua trong 72h.", nodeInstance, device),
 					Flags:   discordgo.MessageFlagsEphemeral,
 				},
 			}
