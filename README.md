@@ -16,9 +16,20 @@ PROXY_PASS=<YOUR_PROXY_PASSWORD>
 
 # Discord
 DISCORD_URL=<YOUR_DISCORD_WEBHOOK_URL>
+DISCORD_BOT_TOKEN=<YOUR_DISCORD_BOT_TOKEN>
+DISCORD_APPLICATION_ID=<YOUR_DISCORD_APPLICATION_ID>
+DISCORD_PUBLIC_KEY=<YOUR_DISCORD_PUBLIC_KEY>
+DISCORD_CHANNEL_ID=<YOUR_DISCORD_CHANNEL_ID>
+
+# Mongodb
+MONGODB_URI=mongodb://mongodb:27017
+MONGODB_DATABASE=grafana-alerts
 ```
 
 ## I. Instruction for run binaries file
+
+> If you run binaries file, remmeber to change MONGODB_URI to your mongodb uri
+
 ```bash
 go build -ldflags="-s -w"
 ```
@@ -28,17 +39,10 @@ go build -ldflags="-s -w"
 ./webhook-server
 ```
 
-## II. Instruction for run docker container
+## II. Instruction for run docker compose
 
-### 1. Build Docker image
 ```bash
-docker build -t webhook-server:latest .
-```
-
-### 2.
-```bash
-docker run -dp 8080:8080 --name webhook-server webhook-server:latest
-
+docker-compose up -d
 ```
 
 ## II. Results Demo

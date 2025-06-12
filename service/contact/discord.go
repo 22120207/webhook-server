@@ -1,11 +1,11 @@
-package service
+package contact
 
 import (
 	"fmt"
 
 	"github.com/bwmarrin/discordgo"
 
-	"webhook-server/config"
+	"webhook-server/service/config"
 )
 
 type IDiscordSender interface {

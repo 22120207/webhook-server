@@ -17,15 +17,15 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"webhook-server/config"
-	"webhook-server/helper"
-	"webhook-server/model"
-	"webhook-server/service"
+	"webhook-server/service/config"
+	"webhook-server/service/contact"
+	"webhook-server/service/helper"
+	"webhook-server/service/model"
 )
 
 type RestController struct {
-	Telegram    service.ITelegramSender
-	Discord     service.IDiscordSender
+	Telegram    contact.ITelegramSender
+	Discord     contact.IDiscordSender
 	MongoClient *mongo.Client
 }
 
@@ -75,7 +75,7 @@ func (rc *RestController) TelegramWebhookHandler(w http.ResponseWriter, r *http.
 
 	for _, alert := range alertData.Alerts {
 		singleAlerts := []model.Alert{alert}
-		message, err := service.RenderTelegramMessage(singleAlerts)
+		message, err := contact.RenderTelegramMessage(singleAlerts)
 		if err != nil {
 			log.Printf("Error rendering Telegram message: %v", err)
 			http.Error(w, "Error rendering message", http.StatusInternalServerError)
@@ -255,12 +255,12 @@ func (rc *RestController) DiscordInteractionHandler(w http.ResponseWriter, r *ht
 			}
 
 			// Update original message
-			updatedMessage := fmt.Sprintf("**Alert suppressed for 72 hours by %s**", interaction.Member.User.Username)
+			updatedMessage := fmt.Sprintf("**Thông được tắt trong 72h bởi %s**", interaction.Member.User.Username)
 			components := []discordgo.MessageComponent{
 				discordgo.ActionsRow{
 					Components: []discordgo.MessageComponent{
 						discordgo.Button{
-							Label:    "Resolve for 72h",
+							Label:    "Tắt trong 72h",
 							Style:    discordgo.PrimaryButton,
 							CustomID: customID,
 							Disabled: true,

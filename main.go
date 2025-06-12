@@ -13,9 +13,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"webhook-server/config"
-	"webhook-server/routes"
-	"webhook-server/service"
+	"webhook-server/service/config"
+	"webhook-server/service/contact"
+	"webhook-server/service/routes"
 )
 
 var mongoClient *mongo.Client
@@ -46,8 +46,8 @@ func main() {
 	}
 
 	server := &routes.RestController{
-		Telegram: &service.TelegramSender{},
-		Discord: &service.DiscordSender{
+		Telegram: &contact.TelegramSender{},
+		Discord: &contact.DiscordSender{
 			Discord:   discord,
 			ChannelID: config.DiscordChannelID,
 		},

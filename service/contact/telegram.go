@@ -1,4 +1,4 @@
-package service
+package contact
 
 import (
 	"bytes"
@@ -14,9 +14,9 @@ import (
 
 	"golang.org/x/net/proxy"
 
-	"webhook-server/config"
-	"webhook-server/helper"
-	"webhook-server/model"
+	"webhook-server/service/config"
+	"webhook-server/service/helper"
+	"webhook-server/service/model"
 )
 
 type ITelegramSender interface {
