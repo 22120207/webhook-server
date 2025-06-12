@@ -22,6 +22,7 @@ type Config struct {
 	DiscordChannelID     string
 	MongoDBURI           string
 	MongoDBDatabase      string
+	TelegramDisabled     string
 }
 
 var (
@@ -51,6 +52,7 @@ func GetConfig() (*Config, error) {
 			DiscordChannelID:     os.Getenv("DISCORD_CHANNEL_ID"),
 			MongoDBURI:           os.Getenv("MONGODB_URI"),
 			MongoDBDatabase:      os.Getenv("MONGODB_DATABASE"),
+			TelegramDisabled:     os.Getenv("TELEGRAM_DISABLED"),
 		}
 
 		// Validate required fields

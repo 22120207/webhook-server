@@ -83,6 +83,7 @@ func (rc *RestController) TelegramWebhookHandler(w http.ResponseWriter, r *http.
 		}
 
 		resp, err := rc.Telegram.SendTelegramMessage(message)
+
 		if err != nil {
 			log.Printf("Telegram message delivery failed: %v", err)
 			http.Error(w, "Message delivery failed", http.StatusInternalServerError)
@@ -255,7 +256,7 @@ func (rc *RestController) DiscordInteractionHandler(w http.ResponseWriter, r *ht
 			}
 
 			// Update original message
-			updatedMessage := fmt.Sprintf("**Thông được tắt trong 72h bởi %s**", interaction.Member.User.Username)
+			updatedMessage := fmt.Sprintf("**Thông báo sẽ được tắt trong 72h bởi %s**", interaction.Member.User.Username)
 			components := []discordgo.MessageComponent{
 				discordgo.ActionsRow{
 					Components: []discordgo.MessageComponent{

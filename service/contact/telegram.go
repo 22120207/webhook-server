@@ -31,6 +31,11 @@ func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to get config: %w", err)
 	}
 
+	if config.TelegramDisabled == "true" {
+		data := []byte("Telegram notifications disabled")
+		return data, nil
+	}
+
 	telegramURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", config.BotToken)
 
 	body := new(bytes.Buffer)
