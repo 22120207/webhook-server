@@ -15,7 +15,7 @@ import (
 
 	"webhook-server/service/config"
 	"webhook-server/service/contact"
-	"webhook-server/service/routes"
+	"webhook-server/service/rest"
 )
 
 var mongoClient *mongo.Client
@@ -45,7 +45,7 @@ func main() {
 		log.Fatalf("Error opening Discord connection: %v", err)
 	}
 
-	server := &routes.RestController{
+	server := &rest.RestController{
 		Telegram: &contact.TelegramSender{},
 		Discord: &contact.DiscordSender{
 			Discord:   discord,
