@@ -1,10 +1,10 @@
-package main
+package helper
 
 import (
 	"encoding/json"
 )
 
-func safeDivide(a interface{}, b float64) float64 {
+func SafeDivide(a interface{}, b float64) float64 {
 	if b == 0 {
 		return 0
 	}

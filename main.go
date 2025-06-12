@@ -8,17 +8,20 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"webhook-server/routes"
+	"webhook-server/service"
 )
 
 func main() {
-	server := &RestController{
-		Telegram: &TelegramSender{},
-		Discord:  &DiscordSender{},
+	server := &routes.RestController{
+		Telegram: &service.TelegramSender{},
+		Discord:  &service.DiscordSender{},
 	}
 
 	httpServer := &http.Server{
 		Addr:         ":8080",
-		Handler:      server.setupRoutes(),
+		Handler:      server.SetUpRoutes(),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,

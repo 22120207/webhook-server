@@ -1,4 +1,4 @@
-module webhook-proxy
+module webhook-server
 
 go 1.23.0
 

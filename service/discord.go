@@ -1,4 +1,4 @@
-package main
+package service
 
 import (
 	"bytes"
@@ -8,6 +8,10 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"webhook-server/config"
+	"webhook-server/helper"
+	"webhook-server/model"
 )
 
 type IDiscordSender interface {
@@ -17,13 +21,13 @@ type IDiscordSender interface {
 type DiscordSender struct{}
 
 func (d *DiscordSender) SendDiscordMessage(message string) ([]byte, error) {
-	config, err := GetConfig()
+	config, err := config.GetConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get config: %w", err)
 	}
 
 	body := new(bytes.Buffer)
-	if err := json.NewEncoder(body).Encode(DiscordMessage{
+	if err := json.NewEncoder(body).Encode(model.DiscordMessage{
 		Content: message,
 	}); err != nil {
 		return nil, fmt.Errorf("failed to encode message: %w", err)
@@ -100,9 +104,9 @@ const discordTemplate = `
 {{- end -}}
 `
 
-func RenderDiscordMessage(alerts []Alert) (string, error) {
+func RenderDiscordMessage(alerts []model.Alert) (string, error) {
 	funcMap := template.FuncMap{
-		"div": safeDivide,
+		"div": helper.SafeDivide,
 	}
 
 	tmpl, err := template.New("discord").Funcs(funcMap).Parse(discordTemplate)

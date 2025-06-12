@@ -1,17 +1,20 @@
-package main
+package routes
 
 import (
 	"encoding/json"
 	"log"
 	"net/http"
+
+	"webhook-server/model"
+	"webhook-server/service"
 )
 
 type RestController struct {
-	Telegram ITelegramSender
-	Discord  IDiscordSender
+	Telegram service.ITelegramSender
+	Discord  service.IDiscordSender
 }
 
-func (rc *RestController) setupRoutes() *http.ServeMux {
+func (rc *RestController) SetUpRoutes() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", rc.HealthHandler)
 	mux.HandleFunc("/telegram", rc.TelegramWebhookHandler)
@@ -35,7 +38,7 @@ func (rc *RestController) TelegramWebhookHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	var alertData GrafanaAlert
+	var alertData model.GrafanaAlert
 	if err := json.NewDecoder(r.Body).Decode(&alertData); err != nil {
 		log.Printf("Invalid JSON body: %v", err)
 		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
@@ -48,9 +51,9 @@ func (rc *RestController) TelegramWebhookHandler(w http.ResponseWriter, r *http.
 	}
 
 	for _, alert := range alertData.Alerts {
-		singleAlerts := []Alert{alert}
+		singleAlerts := []model.Alert{alert}
 
-		message, err := RenderTelegramMessage(singleAlerts)
+		message, err := service.RenderTelegramMessage(singleAlerts)
 		if err != nil {
 			log.Printf("Error rendering Telegram message: %v", err)
 			http.Error(w, "Error rendering message", http.StatusInternalServerError)
@@ -76,7 +79,7 @@ func (rc *RestController) DiscordWebhookHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	var alertData GrafanaAlert
+	var alertData model.GrafanaAlert
 	if err := json.NewDecoder(r.Body).Decode(&alertData); err != nil {
 		log.Printf("Invalid JSON body: %v", err)
 		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
@@ -89,9 +92,9 @@ func (rc *RestController) DiscordWebhookHandler(w http.ResponseWriter, r *http.R
 	}
 
 	for _, alert := range alertData.Alerts {
-		singleAlerts := []Alert{alert}
+		singleAlerts := []model.Alert{alert}
 
-		message, err := RenderDiscordMessage(singleAlerts)
+		message, err := service.RenderDiscordMessage(singleAlerts)
 		if err != nil {
 			log.Printf("Error rendering Discord message: %v", err)
 			http.Error(w, "Error rendering message", http.StatusInternalServerError)

@@ -1,4 +1,4 @@
-package main
+package service
 
 import (
 	"bytes"
@@ -13,6 +13,10 @@ import (
 	"time"
 
 	"golang.org/x/net/proxy"
+
+	"webhook-server/config"
+	"webhook-server/helper"
+	"webhook-server/model"
 )
 
 type ITelegramSender interface {
@@ -22,7 +26,7 @@ type ITelegramSender interface {
 type TelegramSender struct{}
 
 func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
-	config, err := GetConfig()
+	config, err := config.GetConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get config: %w", err)
 	}
@@ -30,7 +34,7 @@ func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
 	telegramURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", config.BotToken)
 
 	body := new(bytes.Buffer)
-	if err := json.NewEncoder(body).Encode(TelegramMessage{
+	if err := json.NewEncoder(body).Encode(model.TelegramMessage{
 		ChatID:    config.ChatID,
 		Text:      message,
 		ParseMode: "HTML",
@@ -74,7 +78,7 @@ func (t *TelegramSender) SendTelegramMessage(message string) ([]byte, error) {
 	return text, nil
 }
 
-func createProxyTransport(config *Config) (*http.Transport, error) {
+func createProxyTransport(config *config.Config) (*http.Transport, error) {
 	proxyURL, err := url.Parse(config.ProxyURL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid proxy URL '%s': %w", config.ProxyURL, err)
@@ -152,9 +156,9 @@ const telegramTemplate = `
 {{- end -}}
 `
 
-func RenderTelegramMessage(alerts []Alert) (string, error) {
+func RenderTelegramMessage(alerts []model.Alert) (string, error) {
 	funcMap := template.FuncMap{
-		"div": safeDivide,
+		"div": helper.SafeDivide,
 	}
 
 	tmpl, err := template.New("telegram").Funcs(funcMap).Parse(telegramTemplate)
