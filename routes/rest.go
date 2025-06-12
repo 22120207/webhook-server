@@ -149,7 +149,7 @@ func (rc *RestController) DiscordWebhookHandler(w http.ResponseWriter, r *http.R
 				discordgo.ActionsRow{
 					Components: []discordgo.MessageComponent{
 						discordgo.Button{
-							Label:    "Resolve for 72h",
+							Label:    "Tắt thông báo trong 72h",
 							Style:    discordgo.PrimaryButton,
 							CustomID: fmt.Sprintf("resolve:%s:%s", nodeInstance, device),
 						},
@@ -276,7 +276,7 @@ func (rc *RestController) DiscordInteractionHandler(w http.ResponseWriter, r *ht
 			response := &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Content: fmt.Sprintf("Alert for %s %s has been suppressed for 72 hours.", nodeInstance, device),
+					Content: fmt.Sprintf("Thông báo cho %s %s sẽ được bỏ qua trong 72h.", nodeInstance, device),
 					Flags:   discordgo.MessageFlagsEphemeral,
 				},
 			}
@@ -291,7 +291,7 @@ func buildFiringMessage(alert model.Alert) string {
 	device := alert.Labels["device"]
 	uptimeYears := fmt.Sprintf("%.2f", helper.SafeDivide(alert.Values["B"], 31536000))
 
-	return fmt.Sprintf("# ❗️❗️� Hodgson CẢNH BÁO HỆ THỐNG ❗️❗️❗️\n\n"+
+	return fmt.Sprintf("# ❗️❗️🚨 CẢNH BÁO LỖI HARDWARE ❗️❗️❗️\n\n"+
 		"> 🚨 **Vấn đề:** %s\n"+
 		"> ⏳ **Thời gian hoạt động:** %s năm\n"+
 		"### 🖥️ Thông tin node:\n"+
